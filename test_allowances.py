@@ -1,6 +1,6 @@
 import unittest
 
-from allowances import UINT160_MAX, UNLIMITED, decode_permit2, fmt, live_permit2, word
+from allowances import UINT160_MAX, UNLIMITED, decode_permit2, fmt, is_unlimited, live_permit2, word
 
 
 def w(n):
@@ -16,9 +16,17 @@ class AllowanceTest(unittest.TestCase):
 
     def test_fmt(self):
         self.assertEqual(fmt(2**256 - 1, 6), "UNLIMITED")
+        self.assertEqual(fmt(2**96 - 1, 18), "UNLIMITED")
         self.assertEqual(fmt(UINT160_MAX, 6, UINT160_MAX), "UNLIMITED")
+        self.assertEqual(fmt(2**96 - 1, 18, UINT160_MAX), "79,228,162,514.2643")
         self.assertEqual(fmt(1_250_000, 6), "1.2500")
         self.assertLess(UNLIMITED, 2**256)
+
+    def test_unlimited_sentinels(self):
+        self.assertTrue(is_unlimited(2**96 - 1))
+        self.assertTrue(is_unlimited(UNLIMITED))
+        self.assertFalse(is_unlimited(2**96 - 1, UINT160_MAX))
+        self.assertFalse(is_unlimited(2**96 - 2))
 
     def test_permit2_liveness(self):
         self.assertTrue(live_permit2(1, 200, 100))

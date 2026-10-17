@@ -28,6 +28,7 @@ ALLOWANCE = "0xdd62ed3e"  # allowance(address,address)
 PERMIT2_ALLOWANCE = "0x927da105"  # allowance(address,address,address)
 DECIMALS = "0x313ce567"
 UNLIMITED = 2**255
+UINT96_MAX = 2**96 - 1
 UINT160_MAX = 2**160 - 1
 
 
@@ -51,8 +52,12 @@ def decode_permit2(hexdata):
     return int(d[0:64], 16), int(d[64:128], 16), int(d[128:192], 16)
 
 
+def is_unlimited(amount, cap=UNLIMITED):
+    return amount >= cap or (cap == UNLIMITED and amount == UINT96_MAX)
+
+
 def fmt(amount, decimals, cap=UNLIMITED):
-    if amount >= cap:
+    if is_unlimited(amount, cap):
         return "UNLIMITED"
     return f"{amount / 10 ** decimals:,.4f}"
 
@@ -102,7 +107,7 @@ def main():
         print(f"  {t:<10}{fmt(amount, decimals[t], UINT160_MAX):>22}  -> {spenders[s]} ({s}), expires in {days:.1f} days")
     if not live2:
         print("  none")
-    unlimited = sum(v >= UNLIMITED for _, v in live)
+    unlimited = sum(is_unlimited(v) for _, v in live)
     print(f"\n{len(live)} ERC-20 allowances ({unlimited} unlimited), {len(live2)} live Permit2 allowances")
 
 
